@@ -1,61 +1,74 @@
 function HWR(filename)
 % You should run train.m first!!!
+close all;
+addpath('network/');
+addpath('preprocess/');
+addpath('images/');
+max_times = 10;
+load network/result/NN.mat;
 
-low_bound = 40;
-load NN.mat;
+im = imread(filename);      % Load the image
+mask = backgroundDetach(im);% Get mask of background
+im = rgb2gray(im);          % Turn image into gray
+im(mask) = 255;             % Clear the background
+im = 255 - im;              % Reverse the color of image
 
-im = imread(filename);  % 读入图像
-im = rgb2gray(im);      % 转为灰度图像
-im = 255 - im;          % 黑白反转
-im = im2bw(im);         % 黑白图像二值化
-im = WipeNoise(im);     %去除噪点
-% imshow(im);
+[L, num_conn] = bwlabel(~mask);        % Find connected components
 
-hori = sum(im);
-left = -1;
+num_pixels = zeros(1, num_conn);
+% Search all connected components and check if it is a digit
+for i = 1:num_conn
+    num_pixels(i) = sum(sum(L == i));
+end
 
-pos = [];
-
-for i = 1:size(hori, 2) - 1
-    if ( hori(i) == 0 && hori(i + 1) ~= 0 )
-        % 进入白区
-        left = i;
-    elseif ( hori(i) ~= 0 && hori(i + 1) == 0 )
-        % 离开白区
-        right = i + 1;
-        pos = [pos; [left, right]];
+sorted_num = sort(num_pixels, 'descend');
+min_num = min(num_pixels);
+for i = 1:num_conn - 1
+    if (sorted_num(i) / sorted_num(i + 1) > max_times)
+        min_num = sorted_num(i);
+        break;
     end
 end
 
-pixels = zeros(size(pos, 1), 1);
-for i = 1:size(pixels, 1)
-    pixels(i) = sum(hori(pos(i,1):pos(i,2)));
-end
-
-pos = pos(pixels > low_bound, :);
-
-fprintf('识别出的数字是：\n');
-for i = 1:size(pos, 1)
-    l = pos(i,1);
-    r = pos(i,2);
-    [u, d] = getHeight(im(:, l:r));
-    cur = im(u:d, l:r);
-    [h, w] = size(cur);
-    if ( h > w )
-        e = floor(( h - w ) / 2);
-        cur = [zeros(h, e + mod(h - w, 2)), cur, zeros(h, e)];
-    elseif (w > h)
-        e = int32(( w - h ) / 2);
-        cur = [zeros(e + mod(w - h, 2), w); cur; zeros(e, w)];
+% Count number of subplots
+num_plots = 0;
+for i = 1:num_conn
+    if (num_pixels(i) >= min_num)
+        num_plots = num_plots + 1;
     end
-    back = zeros(28, 28);
-    cur = imresize(cur * 255, [26, 26]);
-    back(2:27, 2:27) = cur;
-    back = im2bw(back);
-    % figure; imshow(back);
-    pred = predict(Theta1, Theta2, back(:)');
-    if ( pred == 10 ); pred = 0; end;
-    fprintf('%d ', pred);
+end
+display_rows = floor(sqrt(num_plots));
+display_cols = ceil(num_plots / display_rows);
+figure;
+
+fprintf('This image contains:\n');
+idx = 1;
+for i = 1:num_conn
+    % If current component is a digit
+    if (num_pixels(i) >= min_num)
+        [u, d] = getHeight(L == i);
+        [l, r] = getWidth(L == i);
+        cur = im(u:d, l:r);
+        [h, w] = size(cur);
+        if ( h > w )
+            e = floor(( h - w ) / 2);
+            cur = [zeros(h, e + mod(h - w, 2)), cur, zeros(h, e)];
+        elseif (w > h)
+            e = int32(( w - h ) / 2);
+            cur = [zeros(e + mod(w - h, 2), w); cur; zeros(e, w)];
+        end
+        back = uint8(zeros(28, 28));
+        cur = imresize(cur * 255, [20, 20]);
+        back(5:24, 5:24) = cur;
+        back = imgEnhance(back);
+        % Turn image into double value, not uint8
+        pred = predict(Theta1, Theta2, double(back(:)') / 255);
+        if ( pred == 10 ); pred = 0; end;
+        fprintf('%d ', pred);
+        subplot(display_rows, display_cols, idx);
+        imshow(back); title(['This digit is: ', num2str(pred)]);
+        idx = idx + 1;
+    end
 end
 fprintf('\n');
 end

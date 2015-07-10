@@ -48,3 +48,6 @@ NN.mat
 *.txt
 *.exe
 *.log
+*.mat
+*.jpg
+data/
