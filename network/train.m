@@ -3,12 +3,16 @@ function train()
 clear ; close all; clc
 
 %% Setup the parameters
-input_layer_size  = 784;  % 20x20 Input Images of Digits
+train_loops = 800;
+input_layer_size  = 784;  % 18x18 Input Images of Digits
 hidden_layer_size = 50;   % 25 hidden units
-num_labels = 10;          % 10 labels, from 1 to 10   
+num_labels = 10;          % 10 labels, from 1 to 10
                           % (note that we have mapped "0" to label 10)
 %% Load data
-load('10kdata.mat');
+% load('data/10kdata.mat');
+X = loadMNISTImages('data/train-images.idx3-ubyte')';
+y = loadMNISTLabels('data/train-labels.idx1-ubyte');
+y(y == 0) = 10;
 m = size(X, 1);
 
 %% Show data
@@ -25,7 +29,7 @@ initial_nn_params = [initial_Theta1(:) ; initial_Theta2(:)];
 
 %% Begin to train
 fprintf('\nTraining Neural Network... \n');
-options = optimset('MaxIter', 400);
+options = optimset('MaxIter', train_loops);
 lambda = 1;
 costFunction = @(p) nnCostFunction(p, ...
                                    input_layer_size, ...
@@ -43,6 +47,6 @@ pred = predict(Theta1, Theta2, X);
 fprintf('\nTraining Set Accuracy: %f\n', mean(double(pred == y)) * 100);
 
 %% Save results
-save('../NN.mat', 'Theta1', 'Theta2');
+save('result/NN.mat', 'Theta1', 'Theta2');
 
 end
