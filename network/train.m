@@ -4,8 +4,8 @@ clear ; close all; clc
 
 %% Setup the parameters
 train_loops = 800;
-input_layer_size  = 784;  % 18x18 Input Images of Digits
-hidden_layer_size = 50;   % 25 hidden units
+input_layer_size  = 784;  % 28x28 Input Images of Digits
+hidden_layer_size = 50;   % 50 hidden units
 num_labels = 10;          % 10 labels, from 1 to 10
                           % (note that we have mapped "0" to label 10)
 %% Load data

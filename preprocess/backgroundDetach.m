@@ -12,7 +12,15 @@ for i = 0:5:255*3
     im(mask > i) = 255;
     im = im2bw(im, min(i + 1, 255*3) / (255*3));
     im = ~im;
-    % imshow(im); pause(0.05);
+%     imshow(im); pause(0.05);
+%     frame = getframe(gcf);
+%     image = frame2im(frame);
+%     [imind,cm] = rgb2ind(image, 256);
+%     if i == 0;
+%         imwrite(imind,cm,'dynamic.gif','gif', 'Loopcount',Inf,'DelayTime',0.1);
+%     else
+%         imwrite(imind,cm,'dynamic.gif','gif','WriteMode','append', 'DelayTime',0.1);
+%     end
     [L, num] = bwlabel(im);
     idx = i / 5 + 1;
     num_conn(idx) = num;
@@ -22,7 +30,9 @@ for i = 0:5:255*3
         finish = idx; break;
     end;
 end
-% plot(num_conn(start:finish));
+% plot((start - 1) * 5:5:(finish - 1) * 5, num_conn(start:finish));
+% xlabel('最小阈值');
+% ylabel('连通分量个数');
 
 [peaks, location] = findpeaks(num_conn);
 [sorted, index] = sort(peaks, 'descend');

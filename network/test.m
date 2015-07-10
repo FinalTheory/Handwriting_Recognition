@@ -1,4 +1,4 @@
-load ../NN.mat; 
+load result/NN.mat; 
 
 X = loadMNISTImages('data/t10k-images.idx3-ubyte')';
 y = loadMNISTLabels('data/t10k-labels.idx1-ubyte');
